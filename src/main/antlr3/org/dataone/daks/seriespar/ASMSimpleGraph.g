@@ -16,8 +16,8 @@ options {
 @members {
 	String startNode = null;
 	String endNode = null;
-        int parIndex = 1;
-	ASTtoDigraph astToDigraph = new ASTtoDigraph();
+    int parIndex = 1;
+	public ASTtoDigraph astToDigraph = new ASTtoDigraph();
 }
 
 

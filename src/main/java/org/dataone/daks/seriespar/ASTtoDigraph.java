@@ -16,7 +16,7 @@ public class ASTtoDigraph {
 		this.graph = new Digraph();
 	}
 	
-	protected Digraph getDigraph() {
+	public Digraph getDigraph() {
 		return graph;
 	}
 	
@@ -25,7 +25,7 @@ public class ASTtoDigraph {
 		graph.addEdge(node1, node2);
 	}
 	
-	
+
 }
 
 
