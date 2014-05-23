@@ -18,12 +18,12 @@ public class LDBDAOTest {
         LDBDAOTest test = new LDBDAOTest();
         System.out.println("Executing LDBDAOTest with directory: " + directory);
         //test.countQuery(dataset);
-        //test.wfIDsQuery(dataset);
+        test.wfIDsQuery(dataset);
         //test.triplesQuery(dataset);
         //test.processesQuery(dataset, "e0");
         //test.wfIDQuery(dataset, "e0");
         //test.getProcessExecNodes(dataset, "spatialtemporal_summary", "a0");
-        test.getProcessExecNodesQoS(dataset, "wf1", "wf1trace1");
+        //test.getProcessExecNodesQoS(dataset, "wf1", "wf1trace1");
         //test.getUsedDataNodes(dataset, "spatialtemporal_summary", "a0");
         //test.getWasGenByDataNodes(dataset, "spatialtemporal_summary", "a0");
         //test.getWasGenByEdges(dataset, "spatialtemporal_summary", "a0");
@@ -55,6 +55,7 @@ public class LDBDAOTest {
         		"<http://purl.org/dc/terms/identifier> ?v . " +
         		"?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> " +
         		"<http://purl.org/provone/ontology#Workflow> .}";
+        System.out.println("Running query: " + sparqlQueryString);
         Query query = QueryFactory.create(sparqlQueryString);
         QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
         ResultSet results = qexec.execSelect();

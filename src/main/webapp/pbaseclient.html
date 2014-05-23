@@ -130,8 +130,8 @@
 		height: 25px;
 	}
 	
-	#loadWFTabContainer, #queryWFTabContainer, #loadTraceTabContainer, #queryTraceTabContainer, #qosWFTabContainer {
-		height: 550px;
+	#loadWFTabContainer, #queryWFTabContainer, #loadTraceTabContainer, #queryTraceTabContainer {
+		height: 540px;
 		padding-top: 20px;
 		z-index: -1;
 	}
@@ -447,29 +447,19 @@ function createTabs(containerID, isTrace, Y) {
 	var prefix = isTrace ? 'Trace' : 'WF';
 	var loadTabContainerID = 'load' + prefix + 'TabContainer';
 	var queryTabContainerID = 'query' + prefix + 'TabContainer';
-	var qosTabContainerID = 'qos' + 'WF' + 'TabContainer';
 	var loadTabContent = null;
 	if( isTrace )
 		loadTabContent = '<div id="' + loadTabContainerID + '">Trace id:<br/>' +
 		'<select id="traceIdsSelect"><option value=""></option></select>' + 
 		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding">' +
-		'</div>';
+		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
 	else
 		loadTabContent = '<div id="' + loadTabContainerID + '">Database name: ' + 
 			'<input type="text" id="dbnameTextfield" size="15"><br/>' +
 			'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
 			'<select id="wfIdsSelect"></select>' + 
 			'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-			'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"><br/><br/>' + 
-			'Ranking<br/>' +
-			'<form action="">' + 
-			'<input type="radio" name="rankProperty" value="none" checked="checked">None<br>' +
-			'<input type="radio" name="rankProperty" value="aggavgtime">Time<br>' +
-			'<input type="radio" name="rankProperty" value="aggavgcost">Cost<br>' + 
-			'<input type="radio" name="rankProperty" value="aggavgrebty">Reliability<br>' + 
-			'</form>' + 
-			'</div>';
+			'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
 	prefix = isTrace ? 'trace' : 'wf';
 	var queryTabContent = '<div id="' + queryTabContainerID + '">' +
 		'<select id="' + prefix + 'QuerySelect"></select>' + '<br/><br/>' + 
@@ -479,47 +469,15 @@ function createTabs(containerID, isTrace, Y) {
 		'<br/><br/>' +
 		'<input id="' + prefix + 'ReachabilityBtn" type="button" value="View reachability">' +
 		'</div>';
-	var qosTabContent = '<div id="' + qosTabContainerID + '">Global QoS metrics<br/><br/>' +
-		'Aggregate avg. time' +	
-		'<input type="text" id="aggavgtimeQoSTextfield" size="15"><br/>' +
-		'Aggregate avg. cost' +
-		'<input type="text" id="aggavgcostQoSTextfield" size="15"><br/>' +
-		'Aggregate avg. relbty.' +
-		'<input type="text" id="aggavgrebtyQoSTextfield" size="15"><br/><br/>' +
-		'Workflow QoS Metrics<br/><br/>' +
-		'Aggregate avg. time' +	
-		'<input type="text" id="wfaggavgtimeQoSTextfield" size="15"><br/>' +
-		'Aggregate avg. cost' +
-		'<input type="text" id="wfaggavgcostQoSTextfield" size="15"><br/>' +
-		'Aggregate avg. relbty.' +
-		'<input type="text" id="wfaggavgrebtyQoSTextfield" size="15"><br/>' +
-		'</div>';
-	var tabview = null;
-	if( isTrace ) {
-		tabview = new Y.TabView({
-        	children: [{
-            	label: 'Load',
-            	content: loadTabContent
-        	}, {
-            	label: 'Query',
-            	content: queryTabContent
-        	}]
-    	});
-	}
-	else {
-		tabview = new Y.TabView({
-        	children: [{
-            	label: 'Load',
-            	content: loadTabContent
-        	}, {
-            	label: 'Query',
-            	content: queryTabContent
-        	}, {
-            	label: 'QoS',
-            	content: qosTabContent
-        	}]
-    	});
-	}
+	var tabview = new Y.TabView({
+        children: [{
+            label: 'Load',
+            content: loadTabContent
+        }, {
+            label: 'Query',
+            content: queryTabContent
+        }]
+    });
     tabview.render(tabsContainer);
 }
 
@@ -618,13 +576,6 @@ function callWfWS(Y) {
 			complete: function (id, response) {
 				if (response.status >= 200 && response.status < 300) {
 					var json = Y.JSON.parse(response.responseText);
-					//!! edited to display aggregate qos properties
-					var gqosmetrics = json.gqosmetrics;
-					var wfqosmetrics = json.wfqosmetrics;
-					if ( gqosmetrics != null && wfqosmetrics != null ) {
-						//alert(gqosmetrics + '   ' + wfqosmetrics);
-						displayQoSAggMetrics(gqosmetrics, wfqosmetrics, Y);
-					}
 					displayGraphJSON(container, json, btnContainer, isTrace, Y);
 				}
 				else {
@@ -668,9 +619,8 @@ function callWfIdsWS(Y) {
 	var url = 'webresources/wfidsresource';
 	var dbnameTxtField = Y.one('#dbnameTextfield');
 	var dbnameParam = dbnameTxtField.get('value');
-	var rankP = Y.one('[name=rankProperty]:checked').get('value');
 	Y.io(url, {
-		data: 'dbname=' + dbnameParam + '&rankproperty=' + rankP,
+		data: 'dbname=' + dbnameParam,
 		on: {
 			complete: function (id, response) {
 				if (response.status >= 200 && response.status < 300) {
@@ -895,24 +845,6 @@ function highlightReachability(graph, graphNodesArray) {
 }
 
 
-function displayQoSAggMetrics(gqosmetrics, wfqosmetrics, Y) {
-	//Set the global QoS properties
-	var aggavgtimeQoSTextfield = Y.one('#aggavgtimeQoSTextfield');
-	aggavgtimeQoSTextfield.set('value', gqosmetrics.aggavgtime);
-	var aggavgcostQoSTextfield = Y.one('#aggavgcostQoSTextfield');
-	aggavgcostQoSTextfield.set('value', gqosmetrics.aggavgcost);
-	var aggavgrebtyQoSTextfield = Y.one('#aggavgrebtyQoSTextfield');
-	aggavgrebtyQoSTextfield.set('value', gqosmetrics.aggavgrebty);
-	//Set the workflow QoS properties
-	var wfaggavgtimeQoSTextfield = Y.one('#wfaggavgtimeQoSTextfield');
-	wfaggavgtimeQoSTextfield.set('value', wfqosmetrics.wfaggavgtime);
-	var wfaggavgcostQoSTextfield = Y.one('#wfaggavgcostQoSTextfield');
-	wfaggavgcostQoSTextfield.set('value', wfqosmetrics.wfaggavgcost);
-	var wfaggavgrebtyQoSTextfield = Y.one('#wfaggavgrebtyQoSTextfield');
-	wfaggavgrebtyQoSTextfield.set('value', wfqosmetrics.wfaggavgrebty);
-}
-
-
 YUI().use('gallery-axo-layout', 'resize', function(Y) {
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
 	layout.add(new Y.LayoutChild({id:'top', height:30, resize: true }));
@@ -923,8 +855,8 @@ YUI().use('gallery-axo-layout', 'resize', function(Y) {
 	var bottomLayout = new Y.Layout({id:'bottom', height:35, orientation: 'horizontal', resize: true });
 	layout.add(bottomLayout);
 	
-	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:165, resize: true, label: 'Workflow'}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:520, resize: true, label: ' '}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:155, resize: true, label: 'Workflow'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:530, resize: true, label: ' '}));
 	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: ' '}));
 	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:120, resize: true, label: 'Trace'}));
 
