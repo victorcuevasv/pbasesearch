@@ -154,11 +154,23 @@ public class CreateIndexFromJSON {
 	
 	
 	private void createWFIndexEntry(String wfID, String token, String nodeId) {
-		this.searchIndex.put(wfID + "_" + token, nodeId);
+		String oldVal = this.searchIndex.get(wfID + "_" + token);
+		String newVal = null;
+		if( oldVal == null )
+			newVal = nodeId;
+		else
+			newVal = oldVal + " " + nodeId;
+		this.searchIndex.put(wfID + "_" + token, newVal);
 	}
 	
 	
 	private void createTraceIndexEntry(String wfID, int traceNumber, String token, String nodeId) {
+		String oldVal = this.searchIndex.get(wfID + "trace" + traceNumber + "_" + token);
+		String newVal = null;
+		if( oldVal == null )
+			newVal = nodeId;
+		else
+			newVal = oldVal + " " + nodeId;
 		this.searchIndex.put(wfID + "trace" + traceNumber + "_" + token, nodeId);
 	}
 	
@@ -175,7 +187,7 @@ public class CreateIndexFromJSON {
 			}
 			String value = buffer.toString();
 			this.searchIndex.put(token, value);
-			System.out.println(token + " = " + value);
+			//System.out.println(token + " = " + value);
 		}
 	}
 	

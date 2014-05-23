@@ -1,22 +1,30 @@
-To execute the LDBDAOTest application use the command
-
-mvn exec:java -Dexec.mainClass="org.dataone.daks.pbaserdf.dao.LDBDAOTest" -Dexec.args="provone"	  
 
 
-
-mvn exec:java -Dexec.mainClass="org.dataone.daks.seriespar.DatasetGenerator" -Dexec.args="wfs.txt wfs services50.json"
-
-
-mvn exec:java -Dexec.mainClass="org.dataone.daks.pbaserdf.dao.LDBDAOTest" -Dexec.args="seqpargraphs"
+Generate the data
 
 
-<json files folder> <wf ids file> <n traces file> <services catalog file>
+mvn exec:java -Dexec.mainClass="org.dataone.daks.pbasesearch.DatasetGenerator" -Dexec.args="wfs.txt wfs apis genericapis.txt specificapis.txt"
 
 
-mvn exec:java -Dexec.mainClass="org.dataone.daks.seriespar.DigraphJSONtoRDFQoS" -Dexec.args="wfs2 wfs.txt numtraces.txt services50.json"     
+Create the RDF database from the JSON files
 
 
+mvn exec:java -Dexec.mainClass="org.dataone.daks.pbasesearch.DigraphJSONtoRDF" -Dexec.args="wfs wfs.txt numtraces.txt"     
 
+
+Test the RDF database
+
+mvn exec:java -Dexec.mainClass="org.dataone.daks.pbaserdf.dao.LDBDAOTest" -Dexec.args="searchgraphs"
+
+
+Create the index
+
+mvn exec:java -Dexec.mainClass="org.dataone.daks.pbasesearch.CreateIndexFromJSON" -Dexec.args="wfs wfs.txt numtraces.txt apis genericapis.txt specificapis.txt"     
+
+
+Test the index:
+
+mvn exec:java -Dexec.mainClass="org.dataone.daks.pbaserdf.dao.SearchIndexTest" -Dexec.args="searchindexdb ancestry"
 
 
 
