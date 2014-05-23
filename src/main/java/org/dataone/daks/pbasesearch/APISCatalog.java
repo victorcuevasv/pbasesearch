@@ -106,6 +106,20 @@ public class APISCatalog {
 	}
 	
 	
+	public String getServiceDesc(String fullServName) {
+		String apiName = fullServName.substring(0, fullServName.indexOf(":"));
+		String servName = fullServName.substring(fullServName.indexOf(":")+1, fullServName.length()); 
+		String retVal = null;
+		ServiceAPI genericApi = this.genericAPISHT.get(apiName);
+		if( genericApi != null )
+			retVal = genericApi.getServiceDesc(servName);
+		ServiceAPI specificApi = this.specificAPISHT.get(apiName);
+		if( specificApi != null )
+			retVal = specificApi.getServiceDesc(servName);
+		return retVal;
+	}
+	
+	
 	private List<String> readFileAsList(String filename) {
 		BufferedReader reader = null;
 		List<String> list = new ArrayList<String>();

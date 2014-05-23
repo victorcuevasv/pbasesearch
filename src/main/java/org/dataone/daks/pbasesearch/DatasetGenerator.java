@@ -34,7 +34,7 @@ public class DatasetGenerator {
 	public static void main(String args[]) {
 		if( args.length != 5 ) {
 			System.out.println("Usage: java org.dataone.daks.pbasesearch.DatasetGenerator <wf names file> <wfs folder prefix> "     
-					+ "<apis folder> <generic apis file> <specific apis file");     
+					+ "<apis folder> <generic apis file> <specific apis file>");     
 			System.exit(0);
 		}
 		DatasetGenerator generator = new DatasetGenerator(args[2], args[3], args[4]);
