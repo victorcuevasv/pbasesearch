@@ -6,7 +6,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-import org.dataone.daks.pbaserdf.dao.LDBDAO;
+import org.dataone.daks.pbaserdf.dao.TDBDAO;
 
 /** Example resource class hosted at the URI path "/traceidsresource"
  */
@@ -20,7 +20,7 @@ public class TraceIdsResource {
     @GET 
     @Produces("text/plain")
     public String getIt(@QueryParam("dbname") String dbname, @QueryParam("wfid") String wfid) {
-    	LDBDAO dao = LDBDAO.getInstance();
+    	TDBDAO dao = TDBDAO.getInstance();
     	dao.init(dbname);
     	String retVal = null;
     	try {

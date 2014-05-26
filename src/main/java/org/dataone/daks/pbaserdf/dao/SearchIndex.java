@@ -1,6 +1,7 @@
 package org.dataone.daks.pbaserdf.dao;
 
 import java.io.File;
+import java.util.Arrays;
 
 import com.sleepycat.bind.serial.*;
 import com.sleepycat.collections.*;
@@ -15,6 +16,7 @@ public class SearchIndex {
 	private Environment env;
 	private StoredClassCatalog catalog;
 	private Database cacheDb;
+	private Database catalogDb;
 	private StoredMap storedMap;
 	
 	private static final SearchIndex instance = new SearchIndex();
@@ -43,11 +45,11 @@ public class SearchIndex {
 				DatabaseConfig dbConfig = new DatabaseConfig();
 				dbConfig.setTransactional(false);
 				dbConfig.setAllowCreate(true);
-				Database catalogDb = env.openDatabase(null, CLASS_CATALOG, dbConfig);
-				this.catalog = new StoredClassCatalog(catalogDb);
-				SerialBinding fKey = new SerialBinding(catalog, String.class);
-				SerialBinding fValue = new SerialBinding(catalog, String.class);
-				this.storedMap = new StoredMap(catalogDb, fKey, fValue, true);
+				this.catalogDb = this.env.openDatabase(null, CLASS_CATALOG, dbConfig);
+				this.catalog = new StoredClassCatalog(this.catalogDb);
+				SerialBinding fKey = new SerialBinding(this.catalog, String.class);
+				SerialBinding fValue = new SerialBinding(this.catalog, String.class);
+				this.storedMap = new StoredMap(this.catalogDb, fKey, fValue, true);
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -73,11 +75,43 @@ public class SearchIndex {
 	}
 	
 	
+	public void replace(String key, String value) {
+		this.storedMap.replace(key, value);
+	}
+	
+	
 	public String get(String key) {
 		String retVal = null;
 		//if( this.storedMap.containsKey(key) )
 		retVal = (String)this.storedMap.get(key);
 		return retVal;
+	}
+	
+	
+	public String toString() {
+		StringBuffer buffer = new StringBuffer();
+		Cursor cursor = null;
+		try { 
+		    cursor = this.catalogDb.openCursor(null, null);
+		    DatabaseEntry foundKey = new DatabaseEntry();
+		    DatabaseEntry foundData = new DatabaseEntry();
+		    while (cursor.getNext(foundKey, foundData, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+		    	byte[] keyArray = foundKey.getData();
+		        String keyString = "NULL";
+		        if( keyArray.length > 3 )
+		        	keyString = new String( Arrays.copyOfRange(keyArray, 3, keyArray.length ) );
+		        byte[] dataArray = foundData.getData();
+		        String dataString = "NULL";
+		        if( dataArray.length > 3 )
+		        	dataString = new String( Arrays.copyOfRange(dataArray, 3, dataArray.length ) );
+		        buffer.append(keyString + " | " + dataString + "\n");
+		    }
+		    cursor.close();
+		}
+		catch (DatabaseException de) {
+		    System.err.println("Error accessing database." + de);
+		}
+		return buffer.toString();
 	}
 	
 	

@@ -13,7 +13,7 @@ import org.json.*;
 import org.dataone.daks.pbase.treecover.*;
 
 
-public class LDBDAO {
+public class TDBDAO {
 	
 	
 	private Dataset ds;
@@ -22,15 +22,15 @@ public class LDBDAO {
 	
 	private Model model;
 	
-	private static final LDBDAO instance = new LDBDAO();
+	private static final TDBDAO instance = new TDBDAO();
 	
 	
-	public LDBDAO() {
+	public TDBDAO() {
 
 	}
 	
 	
-	public static LDBDAO getInstance() {
+	public static TDBDAO getInstance() {
     	return instance;
     }
 	

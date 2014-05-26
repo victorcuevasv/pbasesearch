@@ -5,7 +5,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.dataone.daks.pbaserdf.dao.LDBDAO;
+import org.dataone.daks.pbaserdf.dao.TDBDAO;
 
 /** Example resource class hosted at the URI path "/exampledaoquery"
  */
@@ -19,7 +19,7 @@ public class ExampleDAOQueryResource {
     @GET 
     @Produces("text/plain")
     public String getIt() {
-    	LDBDAO dao = LDBDAO.getInstance();
+    	TDBDAO dao = TDBDAO.getInstance();
     	dao.init("provone");
     	String wfID = "spatialtemporal_summary";
     	String processID = "e3";

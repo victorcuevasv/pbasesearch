@@ -17,7 +17,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 import org.antlr.runtime.tree.Tree;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
-import org.dataone.daks.pbaserdf.dao.LDBDAO;
+import org.dataone.daks.pbaserdf.dao.TDBDAO;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.ontology.*;
@@ -183,7 +183,7 @@ public class DigraphJSONtoRDFQoS {
 	
 	
 	private void createTDBDatabase(String dbname) {
-		LDBDAO dao = LDBDAO.getInstance();
+		TDBDAO dao = TDBDAO.getInstance();
 		dao.init(dbname);
 		dao.addModel(this.model);
 		dao.shutdown();

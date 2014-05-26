@@ -13,7 +13,7 @@ import com.sun.jersey.multipart.FormDataParam;
 import com.hp.hpl.jena.rdf.model.*;
 
 import org.apache.jena.riot.RDFDataMgr;
-import org.dataone.daks.pbaserdf.dao.LDBDAO;
+import org.dataone.daks.pbaserdf.dao.TDBDAO;
 import org.dataone.daks.provxml2rdf.*;
 
 @Path("/provtraceupload")
@@ -34,7 +34,7 @@ public class ProvTraceUploadService {
 		
 		Model m = RDFDataMgr.loadModel(tempXMLRDFFile);
 		
-		LDBDAO dao = LDBDAO.getInstance();
+		TDBDAO dao = TDBDAO.getInstance();
 		dao.init(dbname);
 		dao.addModel(m);
 		dao.shutdown();

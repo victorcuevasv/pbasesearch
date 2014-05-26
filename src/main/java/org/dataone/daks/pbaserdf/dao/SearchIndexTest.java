@@ -1,5 +1,7 @@
 package org.dataone.daks.pbaserdf.dao;
 
+import java.util.Set;
+
 
 public class SearchIndexTest {
 	
@@ -18,7 +20,8 @@ public class SearchIndexTest {
         SearchIndexTest test = new SearchIndexTest(args[0]);
         System.out.println("Executing SearchIndexTest with directory: " + args[0]);
         //test.testGlobalIndex(args[1]);
-        test.testWorkflowIndex(args[1], args[2]);
+        //test.testWorkflowIndex(args[1], args[2]);
+        test.printCompleteIndex();
     }
     
     
@@ -33,6 +36,11 @@ public class SearchIndexTest {
     	String value = this.searchIndex.get(wfID + "_" + term);
     	System.out.println("wfID: " + wfID + " term: " + term);
     	System.out.println(value);
+    }
+    
+    
+    private void printCompleteIndex() {
+    	System.out.println(this.searchIndex.toString());
     }
     
 	

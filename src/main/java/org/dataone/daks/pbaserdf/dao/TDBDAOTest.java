@@ -7,7 +7,7 @@ import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.tdb.TDBFactory;
 
 
-public class LDBDAOTest {
+public class TDBDAOTest {
 	
 	
     public static void main(String args[]) {
@@ -15,7 +15,7 @@ public class LDBDAOTest {
         // Direct way: Make a TDB-back Jena model in the named directory.
         String directory = "C:\\devp\\apache-tomcat-7.0.50\\bin\\" + args[0];
         Dataset dataset = TDBFactory.createDataset(directory);
-        LDBDAOTest test = new LDBDAOTest();
+        TDBDAOTest test = new TDBDAOTest();
         System.out.println("Executing LDBDAOTest with directory: " + directory);
         //test.countQuery(dataset);
         test.wfIDsQuery(dataset);

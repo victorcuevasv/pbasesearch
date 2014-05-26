@@ -156,22 +156,40 @@ public class CreateIndexFromJSON {
 	private void createWFIndexEntry(String wfID, String token, String nodeId) {
 		String oldVal = this.searchIndex.get(wfID + "_" + token);
 		String newVal = null;
+		boolean exists = false;
 		if( oldVal == null )
-			newVal = nodeId;
+			newVal = " " + nodeId + " ";
+		else {
+			exists = true;
+			if( oldVal.contains(" " + nodeId + " ") )
+				newVal = oldVal;
+			else
+				newVal = oldVal + nodeId + " ";
+		}
+		if( !exists )
+			this.searchIndex.put(wfID + "_" + token, newVal);
 		else
-			newVal = oldVal + " " + nodeId;
-		this.searchIndex.put(wfID + "_" + token, newVal);
+			this.searchIndex.replace(wfID + "_" + token, newVal);
 	}
 	
 	
 	private void createTraceIndexEntry(String wfID, int traceNumber, String token, String nodeId) {
 		String oldVal = this.searchIndex.get(wfID + "trace" + traceNumber + "_" + token);
 		String newVal = null;
+		boolean exists = false;
 		if( oldVal == null )
-			newVal = nodeId;
+			newVal = " " + nodeId + " ";
+		else {
+			exists = true;
+			if( oldVal.contains(" " + nodeId + " ") )
+				newVal = oldVal;
+			else
+				newVal = oldVal + nodeId + " ";
+		}
+		if( !exists )
+			this.searchIndex.put(wfID + "trace" + traceNumber + "_" + token, newVal);
 		else
-			newVal = oldVal + " " + nodeId;
-		this.searchIndex.put(wfID + "trace" + traceNumber + "_" + token, nodeId);
+			this.searchIndex.replace(wfID + "trace" + traceNumber + "_" + token, newVal);
 	}
 	
 	
