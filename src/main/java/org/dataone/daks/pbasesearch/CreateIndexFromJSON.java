@@ -18,7 +18,7 @@ import org.dataone.daks.pbaserdf.dao.*;
 public class CreateIndexFromJSON {
 	
 	
-	private static final String INDEXDB_DIR = "searchindexdb";
+	private static String INDEXDB_DIR = null;
 	
 	private Hashtable<String, Hashtable<String, Integer>> globalIndex;
 	private LuceneAnalyzer analyzer;
@@ -26,22 +26,24 @@ public class CreateIndexFromJSON {
 	private SearchIndex searchIndex;
 	
 	
-	public CreateIndexFromJSON(String apisFolder, String genericApisFile, String specificApisFile) {
+	public CreateIndexFromJSON(String apisFolder, String genericApisFile, String specificApisFile,
+			String rdfDBDirectory) {
 		this.analyzer = new LuceneAnalyzer();
 		this.globalIndex = new Hashtable<String, Hashtable<String, Integer>>();
 		this.catalog = new APISCatalog(apisFolder, genericApisFile, specificApisFile);
 		this.searchIndex = SearchIndex.getInstance();
+		INDEXDB_DIR = rdfDBDirectory + "indexdb";
 		this.searchIndex.init(INDEXDB_DIR);
 	}
 	
 	
 	public static void main(String args[]) {
-		if( args.length != 6 ) {
+		if( args.length != 7 ) {
 			System.out.println("Usage: java org.dataone.daks.pbasesearch.CreateIndexFromJSON <json files folder> <wf ids file> <n traces file> " +      
-					"<apis folder> <generic apis file> <specific apis file>");      
+					"<apis folder> <generic apis file> <specific apis file> <rdf db directory>");      
 			System.exit(0);
 		}
-		CreateIndexFromJSON indexer = new CreateIndexFromJSON(args[3], args[4], args[5]);
+		CreateIndexFromJSON indexer = new CreateIndexFromJSON(args[3], args[4], args[5], args[6]);
 		List<String> wfNamesList = indexer.createWFNamesList(args[1]);
 		HashMap<String, Integer> numTracesHT = indexer.createNumTracesHT(args[2]);
 		String folder = args[0];

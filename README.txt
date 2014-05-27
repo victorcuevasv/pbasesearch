@@ -19,7 +19,7 @@ mvn exec:java -Dexec.mainClass="org.dataone.daks.pbaserdf.dao.LDBDAOTest" -Dexec
 
 Create the index
 
-mvn exec:java -Dexec.mainClass="org.dataone.daks.pbasesearch.CreateIndexFromJSON" -Dexec.args="wfs wfs.txt numtraces.txt apis genericapis.txt specificapis.txt"     
+mvn exec:java -Dexec.mainClass="org.dataone.daks.pbasesearch.CreateIndexFromJSON" -Dexec.args="wfs wfs.txt numtraces.txt apis genericapis.txt specificapis.txt searchgraphs"     
 
 
 Test the index:

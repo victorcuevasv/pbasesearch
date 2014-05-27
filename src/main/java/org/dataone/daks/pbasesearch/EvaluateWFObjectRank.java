@@ -14,15 +14,17 @@ import org.json.*;
 public class EvaluateWFObjectRank {
 	
 	
-	private static final String DBNAME = "searchgraphs";
-	private static final String INDEXDBNAME = "searchindexdb";
+	private String DBNAME = null;
+	private String INDEXDBNAME = null;
 
 	
 	SearchIndex searchIndex;
 	TDBDAO dao;
 	
 	
-	public EvaluateWFObjectRank() {
+	public EvaluateWFObjectRank(String rdfDBDirectory) {
+		DBNAME = rdfDBDirectory;
+		INDEXDBNAME = rdfDBDirectory + "indexdb";
 		this.dao = TDBDAO.getInstance();
 		this.dao.init(DBNAME);
 		this.searchIndex = SearchIndex.getInstance();
@@ -31,18 +33,36 @@ public class EvaluateWFObjectRank {
 	
 	
 	public static void main(String[] args) {
-		EvaluateWFObjectRank evaluator = new EvaluateWFObjectRank();
-		String wfID = args[0];
+		EvaluateWFObjectRank evaluator = new EvaluateWFObjectRank(args[0]);
+		String wfID = args[1];
 		List<String> queryList = new ArrayList<String>();
-		for( int i = 1; i < args.length; i++ )
+		for( int i = 2; i < args.length; i++ )
 			queryList.add(args[i]);
 		Digraph digraph = new Digraph();
 		JSONObject jsonObj = new JSONObject();
 		evaluator.fillDigraphAndTopSortedJSONObj(wfID, digraph, jsonObj);
-		for( String word : queryList ) {
-			Hashtable<String, Double> objectRankHT = evaluator.evaluateObjectRank(wfID, digraph, jsonObj, word);
-			System.out.println("ObjectRank values:");
-			evaluator.printObjectRankHT(objectRankHT);
+		Hashtable<String, Double> objectRankHT = null;
+		Hashtable<String, Double> tempObjectRankHT = null;
+		for( int i = 0; i < queryList.size(); i++ ) {
+			String word = queryList.get(i);
+			if( i == 0 ) {
+				objectRankHT = evaluator.evaluateObjectRank(wfID, digraph, jsonObj, word);     
+				System.out.println("First objectRank values:");
+				evaluator.printObjectRankHT(objectRankHT);
+			}
+			if( i > 0 ) {
+				tempObjectRankHT = evaluator.evaluateObjectRank(wfID, digraph, jsonObj, word);
+				System.out.println("Next objectRank values:");
+				evaluator.printObjectRankHT(tempObjectRankHT);
+				Set<String> htKeys = tempObjectRankHT.keySet();
+				for( String key : htKeys ) {
+					double val = objectRankHT.get(key);
+					double tempVal = tempObjectRankHT.get(key);
+					objectRankHT.put(key, val * tempVal);
+				}
+				System.out.println("Combined objectRank values:");
+				evaluator.printObjectRankHT(objectRankHT);
+			}
 		}
 	}
 	
@@ -111,7 +131,7 @@ public class EvaluateWFObjectRank {
 			for( int i = 0; i < topSortedNodesArray.length(); i++ ) {
 				JSONObject nodeObj = topSortedNodesArray.getJSONObject(i);
 				String nodeId = nodeObj.getString("nodeId");
-				System.out.println(nodeId);
+				//System.out.println(nodeId);
 				double nodeOR = objectRankHT.get(nodeId);
 				List<String> adjList = digraph.getAdjList(nodeId);
 				double alpha = 0.0;
