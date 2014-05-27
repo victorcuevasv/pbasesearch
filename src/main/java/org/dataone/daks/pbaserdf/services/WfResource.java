@@ -4,6 +4,9 @@ package org.dataone.daks.pbaserdf.services;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -11,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.dataone.daks.pbaserdf.dao.TDBDAO;
+import org.dataone.daks.pbasesearch.EvaluateWFObjectRank;
 
 /** Example resource class hosted at the URI path "/wfresource"
  */
@@ -23,17 +27,29 @@ public class WfResource {
      */
     @GET 
     @Produces("text/plain")
-    public String getIt(@QueryParam("dbname") String dbname, @QueryParam("wfid") String wfid) {
+    public String getIt(@QueryParam("dbname") String dbname, @QueryParam("wfid") String wfid, 
+    		@QueryParam("keywords") String keywords, @QueryParam("andsemantics") String andsemantics) {
+    	String retVal = null;
     	TDBDAO dao = TDBDAO.getInstance();
     	dao.init(dbname);
-    	String retVal = null;
-    	try {
+    	if( keywords == null ) {
     		retVal = dao.getWorkflowReachEncoding(wfid);
-    		//retVal = this.getFileContents("jsonWF.txt");
-    		//System.out.println("Read jsonWF.txt");
-    	}
-    	catch(Exception e) {
-    		e.printStackTrace();
+		}
+    	else {
+    		try {
+    			EvaluateWFObjectRank evaluator = new EvaluateWFObjectRank(dbname);
+    			StringTokenizer tokenizer = new StringTokenizer(keywords);
+    			List<String> keywordList = new ArrayList<String>();
+    			while( tokenizer.hasMoreTokens() )
+    				keywordList.add( tokenizer.nextToken() );
+    			boolean andSemantics = false;
+    			if( andsemantics != null && andsemantics.equalsIgnoreCase("true") )
+    				andSemantics = true;
+    			retVal = evaluator.processKeywordQuery(wfid, keywordList, andSemantics);
+    		}
+    		catch(Exception e) {
+    			e.printStackTrace();
+    		}
     	}
     	return retVal;
     }

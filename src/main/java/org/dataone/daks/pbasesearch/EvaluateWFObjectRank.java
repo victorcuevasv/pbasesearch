@@ -38,32 +38,64 @@ public class EvaluateWFObjectRank {
 		List<String> queryList = new ArrayList<String>();
 		for( int i = 2; i < args.length; i++ )
 			queryList.add(args[i]);
+		String outStr = evaluator.processKeywordQuery(wfID, queryList, true);
+		System.out.println(outStr);
+	}
+	
+	
+	public String processKeywordQuery(String wfID, List<String> queryList, boolean andSemantics) {
 		Digraph digraph = new Digraph();
 		JSONObject jsonObj = new JSONObject();
-		evaluator.fillDigraphAndTopSortedJSONObj(wfID, digraph, jsonObj);
+		this.fillDigraphAndTopSortedJSONObj(wfID, digraph, jsonObj);
 		Hashtable<String, Double> objectRankHT = null;
 		Hashtable<String, Double> tempObjectRankHT = null;
 		for( int i = 0; i < queryList.size(); i++ ) {
 			String word = queryList.get(i);
 			if( i == 0 ) {
-				objectRankHT = evaluator.evaluateObjectRank(wfID, digraph, jsonObj, word);     
-				System.out.println("First objectRank values:");
-				evaluator.printObjectRankHT(objectRankHT);
+				objectRankHT = this.evaluateObjectRank(wfID, digraph, jsonObj, word);     
+				//System.out.println("First objectRank values:");
+				//this.printObjectRankHT(objectRankHT);
 			}
 			if( i > 0 ) {
-				tempObjectRankHT = evaluator.evaluateObjectRank(wfID, digraph, jsonObj, word);
-				System.out.println("Next objectRank values:");
-				evaluator.printObjectRankHT(tempObjectRankHT);
+				tempObjectRankHT = this.evaluateObjectRank(wfID, digraph, jsonObj, word);
+				//System.out.println("Next objectRank values:");
+				//this.printObjectRankHT(tempObjectRankHT);
 				Set<String> htKeys = tempObjectRankHT.keySet();
 				for( String key : htKeys ) {
 					double val = objectRankHT.get(key);
 					double tempVal = tempObjectRankHT.get(key);
-					objectRankHT.put(key, val * tempVal);
+					if( andSemantics )
+						objectRankHT.put(key, val * tempVal);
+					else
+						objectRankHT.put(key, val + tempVal);
 				}
-				System.out.println("Combined objectRank values:");
-				evaluator.printObjectRankHT(objectRankHT);
+				//System.out.println("Combined objectRank values:");
+				//this.printObjectRankHT(objectRankHT);
 			}
 		}
+		String wfJSONStr = this.dao.getWorkflowReachEncoding(wfID);
+		String wfJSONStrOR = this.addObjectRankValues(wfJSONStr, objectRankHT);
+		return wfJSONStrOR;
+	}
+	
+	
+	public String addObjectRankValues(String wfJSONStr, Hashtable<String, Double> objectRankHT) {
+		JSONObject wfObj = null;
+		try {
+			wfObj = new JSONObject(wfJSONStr);
+			JSONArray nodesArray = wfObj.getJSONArray("nodes");
+			for( int i = 0; i < nodesArray.length(); i++ ) {
+				JSONObject nodeObj = nodesArray.getJSONObject(i);
+				String nodeId = nodeObj.getString("nodeId");
+				double objectRankVal = objectRankHT.get(nodeId);
+				String objectRankStr = String.format("%.3f", objectRankVal);
+				nodeObj.put("objectrank", objectRankStr);
+			}
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return wfObj.toString();
 	}
 	
 	
@@ -111,13 +143,13 @@ public class EvaluateWFObjectRank {
 		while( tokenizer.hasMoreTokens() ) {
 			String token = tokenizer.nextToken();
 			matchNodesList.add(token);
-			System.out.println("Match node: " + token);
+			//System.out.println("Match node: " + token);
 		}
 		JSONArray topSortedNodesArray = null;
 		double base = 1.0/ digraph.nVertices();
 		double val = (1.0-d) / matchNodesList.size();
-		System.out.println("val: " + val);
-		System.out.println("base: " + base);
+		//System.out.println("val: " + val);
+		//System.out.println("base: " + base);
 		try {
 			topSortedNodesArray = jsonObj.getJSONArray("nodes");
 			for( int i = 0; i < topSortedNodesArray.length(); i++ ) {

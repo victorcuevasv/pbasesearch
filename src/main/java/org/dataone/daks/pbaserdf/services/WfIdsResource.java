@@ -1,12 +1,17 @@
 
 package org.dataone.daks.pbaserdf.services;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.dataone.daks.pbaserdf.dao.TDBDAO;
+import org.dataone.daks.pbasesearch.EvaluateWFKeywordRank;
 
 /** Example resource class hosted at the URI path "/wfidsresource"
  */
@@ -20,20 +25,32 @@ public class WfIdsResource {
     @GET 
     @Produces("text/plain")
     public String getIt(@QueryParam("dbname") String dbname, 
-    		@QueryParam("rankproperty") String rankProperty) {
-    	TDBDAO dao = TDBDAO.getInstance();
-    	dao.init(dbname);
+    		@QueryParam("keywords") String keywords) {
     	String retVal = null;
     	try {
-    		if( rankProperty == null || rankProperty.equals("none") )
+    		if( keywords == null ) {
+    			TDBDAO dao = TDBDAO.getInstance();
+    	    	dao.init(dbname);
     			retVal = dao.getWfIDs();
-    		else
-    			retVal = dao.getWfIDsRanked(rankProperty);
+    		}
+    		else {
+    			EvaluateWFKeywordRank evaluator = new EvaluateWFKeywordRank(dbname);
+    			StringTokenizer tokenizer = new StringTokenizer(keywords);
+    			List<String> keywordList = new ArrayList<String>();
+    			while( tokenizer.hasMoreTokens() )
+    				keywordList.add( tokenizer.nextToken() );
+    			retVal = evaluator.getWfIdsKeywordRanked(keywordList);
+    		}
     	}
     	catch(Exception e) {
     		e.printStackTrace();
     	}
     	return retVal;
     }
+    
+    
 }
+
+
+
 

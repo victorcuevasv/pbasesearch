@@ -45,7 +45,7 @@ public class EvaluateWFKeywordRank {
 	}
 	
 	
-	private String getWfIdsKeywordRanked(List<String> queryList) {
+	public String getWfIdsKeywordRanked(List<String> queryList) {
 		String baseJSONArrayStr = this.dao.getWfIDs();
 		String retVal = null;
 		try {
