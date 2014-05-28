@@ -427,12 +427,18 @@ function activateButtons(graph, hierLayout, parent, containerID, Y) {
 	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
 	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
 	//Added for search
-	var searchBtn = Y.one('#wfSearchBtn');
-	var searchBtnFunc = function() {
+	var wfSearchBtn = Y.one('#wfSearchBtn');
+	var wfSearchBtnFunc = function() {
 			callWfWSSearch(Y);
-			callWfWSSearchTable(Y);
+			callSearchTableWS(Y, false);
 		} ;
-	searchBtn.set('onclick', searchBtnFunc);
+	wfSearchBtn.set('onclick', wfSearchBtnFunc);
+	var traceSearchBtn = Y.one('#traceSearchBtn');
+	var traceSearchBtnFunc = function() {
+			callTraceWSSearch(Y);
+			callSearchTableWS(Y, true);
+		} ;
+	traceSearchBtn.set('onclick', traceSearchBtnFunc);
 }
 
 
@@ -641,21 +647,41 @@ function callWfWSSearch(Y) {
 }
 
 
-function callWfWSSearchTable(Y) {
-	var url = 'webresources/wfresource';
-	var container = document.getElementById('wfContainer');
-	var btnContainer = 'left';
-	var isTrace = false;
+function callSearchTableWS(Y, isTrace) {
+	var url = null;
+	var container = null;
+	var btnContainer = null;
+	var keywordsTextfield = null;
+	var keywordsParam = null;
+	var semanticsStr = null;
+	var searchStr = '';
+	if( !isTrace ) {
+		url = 'webresources/wfresource';
+		container = document.getElementById('wfContainer');
+		btnContainer = 'left';
+		keywordsTextfield = Y.one('#wfSearchText');
+		keywordsParam = keywordsTextfield.get('value');
+		semanticsStr = Y.one('[name=wfsemanticsProperty]:checked').get('value');
+		if( keywordsParam.trim().length > 1 )
+			searchStr = '&keywords=' + encodeURIComponent(keywordsParam) + '&andsemantics=' + semanticsStr;
+	}
+	else {
+		url = 'webresources/traceresource';
+		container = document.getElementById('traceContainer');
+		btnContainer = 'right';
+		keywordsTextfield = Y.one('#traceSearchText');
+		keywordsParam = keywordsTextfield.get('value');
+		semanticsStr = Y.one('[name=tracesemanticsProperty]:checked').get('value');
+		var traceIdsSelect = Y.one('#traceIdsSelect');
+		var traceIdParam = traceIdsSelect.get('value');
+		if( keywordsParam.trim().length > 1 )
+			searchStr = '&keywords=' + encodeURIComponent(keywordsParam) + '&andsemantics=' + semanticsStr + 
+			'&traceid=' + traceIdParam;
+	}
 	var dbnameTxtField = Y.one('#dbnameTextfield');
 	var dbnameParam = dbnameTxtField.get('value');
 	var wfIdsSelect = Y.one('#wfIdsSelect');
 	var wfIdParam = wfIdsSelect.get('value');
-	var keywordsTextfield = Y.one('#wfSearchText');
-	var keywordsParam = keywordsTextfield.get('value');
-	var semanticsStr = Y.one('[name=wfsemanticsProperty]:checked').get('value');
-	var searchStr = '';
-	if( keywordsParam.trim().length > 1 )
-		searchStr = '&keywords=' + encodeURIComponent(keywordsParam) + '&andsemantics=' + semanticsStr;
 	Y.io(url, {
 		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + searchStr + '&onlytable=true',
 		on: {
@@ -701,6 +727,40 @@ function callWfWSSearchTable(Y) {
 				}
 			} //end complete
 		} //end on
+	});
+}
+
+
+function callTraceWSSearch(Y) {
+	var url = 'webresources/traceresource';
+	var container = document.getElementById('traceContainer');
+	var btnContainer = 'right';
+	var isTrace = true;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var traceIdsSelect = Y.one('#traceIdsSelect');
+	var traceIdParam = traceIdsSelect.get('value');
+	var keywordsTextfield = Y.one('#traceSearchText');
+	var keywordsParam = keywordsTextfield.get('value');
+	var semanticsStr = Y.one('[name=tracesemanticsProperty]:checked').get('value');
+	var searchStr = '';
+	if( keywordsParam.trim().length > 1 )
+		searchStr = '&keywords=' + encodeURIComponent(keywordsParam) + '&andsemantics=' + semanticsStr;
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + '&traceid=' + traceIdParam + searchStr,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
 	});
 }
 

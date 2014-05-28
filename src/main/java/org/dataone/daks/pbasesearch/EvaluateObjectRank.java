@@ -218,15 +218,19 @@ public class EvaluateObjectRank {
 		else
 			matchNodesStr = this.searchIndex.get(traceId + "_" + word);
 		List<String> matchNodesList = new ArrayList<String>();
-		StringTokenizer tokenizer = new StringTokenizer(matchNodesStr);
-		while( tokenizer.hasMoreTokens() ) {
-			String token = tokenizer.nextToken();
-			matchNodesList.add(token);
-			//System.out.println("Match node: " + token);
+		if( matchNodesStr != null ) {
+			StringTokenizer tokenizer = new StringTokenizer(matchNodesStr);
+			while( tokenizer.hasMoreTokens() ) {
+				String token = tokenizer.nextToken();
+				matchNodesList.add(token);
+				//System.out.println("Match node: " + token);
+			}
 		}
 		JSONArray topSortedNodesArray = null;
 		double base = 1.0/ digraph.nVertices();
-		double val = (1.0-d) / matchNodesList.size();
+		double val = 0.0;
+		if( matchNodesList.size() > 0 )
+			val = (1.0-d) / matchNodesList.size();
 		//System.out.println("val: " + val);
 		//System.out.println("base: " + base);
 		try {
