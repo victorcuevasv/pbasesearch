@@ -28,7 +28,8 @@ public class WfResource {
     @GET 
     @Produces("text/plain")
     public String getIt(@QueryParam("dbname") String dbname, @QueryParam("wfid") String wfid, 
-    		@QueryParam("keywords") String keywords, @QueryParam("andsemantics") String andsemantics) {
+    		@QueryParam("keywords") String keywords, @QueryParam("andsemantics") String andsemantics,
+    		@QueryParam("onlytable") String onlytable) {
     	String retVal = null;
     	TDBDAO dao = TDBDAO.getInstance();
     	dao.init(dbname);
@@ -43,9 +44,12 @@ public class WfResource {
     			while( tokenizer.hasMoreTokens() )
     				keywordList.add( tokenizer.nextToken() );
     			boolean andSemantics = false;
+    			boolean onlyTable = false;
     			if( andsemantics != null && andsemantics.equalsIgnoreCase("true") )
     				andSemantics = true;
-    			retVal = evaluator.processKeywordQuery(wfid, keywordList, andSemantics);
+    			if( onlytable != null && onlytable.equalsIgnoreCase("true") )
+    				onlyTable = true;
+    			retVal = evaluator.processKeywordQuery(wfid, keywordList, andSemantics, onlyTable);
     		}
     		catch(Exception e) {
     			e.printStackTrace();

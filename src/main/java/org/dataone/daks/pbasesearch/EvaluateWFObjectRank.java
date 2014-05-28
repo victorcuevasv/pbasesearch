@@ -10,6 +10,11 @@ import org.dataone.daks.pbase.treecover.Digraph;
 import org.dataone.daks.pbaserdf.dao.*;
 import org.json.*;
 
+import com.gs.collections.api.block.function.Function;
+import com.gs.collections.api.list.*;
+import com.gs.collections.api.tuple.Pair;
+import com.gs.collections.impl.list.mutable.FastList;
+
 
 public class EvaluateWFObjectRank {
 	
@@ -38,12 +43,13 @@ public class EvaluateWFObjectRank {
 		List<String> queryList = new ArrayList<String>();
 		for( int i = 2; i < args.length; i++ )
 			queryList.add(args[i]);
-		String outStr = evaluator.processKeywordQuery(wfID, queryList, true);
+		String outStr = evaluator.processKeywordQuery(wfID, queryList, true, false);
 		System.out.println(outStr);
 	}
 	
 	
-	public String processKeywordQuery(String wfID, List<String> queryList, boolean andSemantics) {
+	public String processKeywordQuery(String wfID, List<String> queryList, boolean andSemantics,
+			boolean onlyTable) {
 		Digraph digraph = new Digraph();
 		JSONObject jsonObj = new JSONObject();
 		this.fillDigraphAndTopSortedJSONObj(wfID, digraph, jsonObj);
@@ -73,9 +79,16 @@ public class EvaluateWFObjectRank {
 				//this.printObjectRankHT(objectRankHT);
 			}
 		}
-		String wfJSONStr = this.dao.getWorkflowReachEncoding(wfID);
-		String wfJSONStrOR = this.addObjectRankValues(wfJSONStr, objectRankHT);
-		return wfJSONStrOR;
+		String retVal = null;
+		if( !onlyTable ) {
+			String wfJSONStr = this.dao.getWorkflowReachEncoding(wfID);
+			retVal = this.addObjectRankValues(wfJSONStr, objectRankHT);
+		}
+		else {
+			MutableList<Pair<String, Double>> sortedPairs = this.createSortedPairs(objectRankHT);
+			retVal = this.createObjectRankTable(sortedPairs);
+		}
+		return retVal;
 	}
 	
 	
@@ -96,6 +109,57 @@ public class EvaluateWFObjectRank {
 			e.printStackTrace();
 		}
 		return wfObj.toString();
+	}
+	
+	
+	private MutableList<Pair<String, Double>> createSortedPairs(Hashtable<String, Double> objectRankHT) {
+		MutableList<String> idsList = FastList.newList();
+		MutableList<Double> scoresList = FastList.newList();
+		Set<String> htKeys = objectRankHT.keySet();
+		for( String key : htKeys ) {
+			double score = objectRankHT.get(key);
+			idsList.add(key);
+			scoresList.add(score);
+		}
+		MutableList<Pair<String, Double>> pairs = idsList.zip(scoresList); 
+		MutableList<Pair<String, Double>> sortedPairs = pairs.toSortedListBy(
+				new Function<Pair<String, Double>, Double>() { 
+					public Double valueOf(Pair<String, Double> pair) { 
+						return pair.getTwo();
+					} 
+				} );
+		return sortedPairs.reverseThis();
+	}
+	
+	
+	private String createObjectRankTable(MutableList<Pair<String, Double>> sortedPairs) {
+		JSONObject tableObj = new JSONObject();
+		JSONArray columnsArray = new JSONArray();
+		JSONArray dataArray = new JSONArray();
+		try {
+			JSONObject idCol = new JSONObject();
+			JSONObject scoreCol = new JSONObject();
+			idCol.put("id", "string");
+			scoreCol.put("score", "string");
+			columnsArray.put(idCol);
+			columnsArray.put(scoreCol);
+			JSONArray rowArray = null;
+			for( int i = 0; i < sortedPairs.size(); i++ ) {
+				rowArray = new JSONArray();
+				String idStr = sortedPairs.get(i).getOne();
+				rowArray.put(idStr);
+				double score = sortedPairs.get(i).getTwo();
+				String scoreStr = String.format("%.3f", score);
+				rowArray.put(scoreStr);
+				dataArray.put(rowArray);
+			}
+			tableObj.put("columns", columnsArray);
+			tableObj.put("data", dataArray);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return tableObj.toString();
 	}
 	
 	

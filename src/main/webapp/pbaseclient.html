@@ -426,6 +426,13 @@ function activateButtons(graph, hierLayout, parent, containerID, Y) {
 	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
 	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
 	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
+	//Added for search
+	var searchBtn = Y.one('#wfSearchBtn');
+	var searchBtnFunc = function() {
+			callWfWSSearch(Y);
+			callWfWSSearchTable(Y);
+		} ;
+	searchBtn.set('onclick', searchBtnFunc);
 }
 
 
@@ -598,6 +605,108 @@ function callWfWS(Y) {
 				}
 			}
 		}
+	});
+}
+
+
+function callWfWSSearch(Y) {
+	var url = 'webresources/wfresource';
+	var container = document.getElementById('wfContainer');
+	var btnContainer = 'left';
+	var isTrace = false;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var keywordsTextfield = Y.one('#wfSearchText');
+	var keywordsParam = keywordsTextfield.get('value');
+	var semanticsStr = Y.one('[name=wfsemanticsProperty]:checked').get('value');
+	var searchStr = '';
+	if( keywordsParam.trim().length > 1 )
+		searchStr = '&keywords=' + encodeURIComponent(keywordsParam) + '&andsemantics=' + semanticsStr;
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + searchStr,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callWfWSSearchTable(Y) {
+	var url = 'webresources/wfresource';
+	var container = document.getElementById('wfContainer');
+	var btnContainer = 'left';
+	var isTrace = false;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var keywordsTextfield = Y.one('#wfSearchText');
+	var keywordsParam = keywordsTextfield.get('value');
+	var semanticsStr = Y.one('[name=wfsemanticsProperty]:checked').get('value');
+	var searchStr = '';
+	if( keywordsParam.trim().length > 1 )
+		searchStr = '&keywords=' + encodeURIComponent(keywordsParam) + '&andsemantics=' + semanticsStr;
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + searchStr + '&onlytable=true',
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					var results_window = window.open("", "results_window", "menubar=1,resizable=1,width=500,height=600,scrollbars=1");
+					results_window.document['writeln']('<head><link charset="utf-8" href="css/combo.css" rel="stylesheet" type="text/css"></head><body class="yui3-skin-sam"><h3>Results</h3><div id="table_content"></div><br/></body>');
+					var cols = [];
+					var colsTypes = [];
+				    var data = [];
+				    var nodeIds = [];
+					var colNames = json.columns;
+					for(var i = 0; i < colNames.length; i++) {
+						var cName = colNames[i];
+						for(var key in cName) {
+							if( cName.hasOwnProperty(key) ) {
+								cols[i] = key;
+								colsTypes[i] = cName[key];
+								break;
+							}
+						}
+					}
+					var dataVals = json.data;
+					for(var i = 0; i < dataVals.length; i++) {
+						data[i] = {};
+						for(var j = 0; j < dataVals[i].length; j++) {
+							if( colsTypes[j] == 'string' ) {
+								data[i][cols[j]] = dataVals[i][j];
+							}
+							else if( colsTypes[j] == 'node' ) {
+								temp = dataVals[i][j];
+								data[i][cols[j]] = temp['nodeId'];
+								nodeIds.push(temp['nodeId']);
+							}
+						}
+					}
+					YUI({win: results_window, doc: results_window.document, fetchCSS: false}).use('datatable-base', 'widget-base', function (childY) {
+							var table = new childY.DataTable.Base({
+					        	columnset: cols,
+					        	recordset: data
+					    	});
+							table.render(childY.one('#table_content'));
+						}
+				    );
+				}
+				else {
+					alert('ERROR');
+				}
+			} //end complete
+		} //end on
 	});
 }
 
