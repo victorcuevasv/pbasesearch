@@ -533,43 +533,49 @@ public class TDBDAO {
 	}
 	
 	
-	public String getTrace(String wfID, String runID) throws JSONException {
-		JSONObject resultObj = new JSONObject();
-		//Get the data nodes
-		Hashtable<String, JSONObject> nodesHT = new Hashtable<String, JSONObject>();
-		this.getUsedDataNodes(wfID, runID, nodesHT);
-		this.getWasGenByDataNodes(wfID, runID, nodesHT);
-		//Get the activity nodes
-		this.getProcessExecNodes(wfID, runID, nodesHT);
-		//Get the edges
-		List<JSONObject> usedEdges = getUsedEdges(wfID, runID);
-		List<JSONObject> wasGenByEdges = getWasGenByEdges(wfID, runID);
-		JSONArray edgesArray = new JSONArray();
-		Digraph digraph = new Digraph();
-		Digraph coverDigraph = new Digraph();
-		for(JSONObject usedEdge: usedEdges) {
-			edgesArray.put(usedEdge);
-			digraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
-			coverDigraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
+	public String getTrace(String wfID, String runID) {
+		JSONObject resultObj = null;
+		try {
+			resultObj = new JSONObject();
+			//Get the data nodes
+			Hashtable<String, JSONObject> nodesHT = new Hashtable<String, JSONObject>();
+			this.getUsedDataNodes(wfID, runID, nodesHT);
+			this.getWasGenByDataNodes(wfID, runID, nodesHT);
+			//Get the activity nodes
+			this.getProcessExecNodes(wfID, runID, nodesHT);
+			//Get the edges
+			List<JSONObject> usedEdges = getUsedEdges(wfID, runID);
+			List<JSONObject> wasGenByEdges = getWasGenByEdges(wfID, runID);
+			JSONArray edgesArray = new JSONArray();
+			Digraph digraph = new Digraph();
+			Digraph coverDigraph = new Digraph();
+			for(JSONObject usedEdge: usedEdges) {
+				edgesArray.put(usedEdge);
+				digraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
+				coverDigraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
+			}
+			for(JSONObject wasGenByEdge: wasGenByEdges) {
+				edgesArray.put(wasGenByEdge);
+				digraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
+				coverDigraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
+			}
+			resultObj.put("edges", edgesArray);
+			JSONArray nodesArray = new JSONArray();
+			TreeCover cover = new TreeCover();
+			cover.createCover(coverDigraph);
+			List<String> revTopSortList = digraph.reverseTopSort();
+			for(String nodeStr : revTopSortList) {
+				JSONObject nodeObj = nodesHT.get(nodeStr);
+				nodeObj.put("intervals", "[" + cover.getCode(nodeStr).toString() + "]");
+				nodeObj.put("postorder", cover.getPostorder(nodeStr));
+				nodesArray.put(nodeObj);
+			}
+			resultObj.put("nodes", nodesArray);
 		}
-		for(JSONObject wasGenByEdge: wasGenByEdges) {
-			edgesArray.put(wasGenByEdge);
-			digraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
-			coverDigraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
+		catch(JSONException e) {
+			e.printStackTrace();
 		}
-		resultObj.put("edges", edgesArray);
-		JSONArray nodesArray = new JSONArray();
-		TreeCover cover = new TreeCover();
-		cover.createCover(coverDigraph);
-		List<String> revTopSortList = digraph.reverseTopSort();
-		for(String nodeStr : revTopSortList) {
-			JSONObject nodeObj = nodesHT.get(nodeStr);
-			nodeObj.put("intervals", "[" + cover.getCode(nodeStr).toString() + "]");
-			nodeObj.put("postorder", cover.getPostorder(nodeStr));
-			nodesArray.put(nodeObj);
-		}
-		resultObj.put("nodes", nodesArray);
-        return resultObj.toString();
+		return resultObj.toString();
 	}
 
 	

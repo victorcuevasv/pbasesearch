@@ -16,7 +16,7 @@ import com.gs.collections.api.tuple.Pair;
 import com.gs.collections.impl.list.mutable.FastList;
 
 
-public class EvaluateWFObjectRank {
+public class EvaluateObjectRank {
 	
 	
 	private String DBNAME = null;
@@ -27,7 +27,7 @@ public class EvaluateWFObjectRank {
 	TDBDAO dao;
 	
 	
-	public EvaluateWFObjectRank(String rdfDBDirectory) {
+	public EvaluateObjectRank(String rdfDBDirectory) {
 		DBNAME = rdfDBDirectory;
 		INDEXDBNAME = rdfDBDirectory + "indexdb";
 		this.dao = TDBDAO.getInstance();
@@ -38,32 +38,32 @@ public class EvaluateWFObjectRank {
 	
 	
 	public static void main(String[] args) {
-		EvaluateWFObjectRank evaluator = new EvaluateWFObjectRank(args[0]);
+		EvaluateObjectRank evaluator = new EvaluateObjectRank(args[0]);
 		String wfID = args[1];
 		List<String> queryList = new ArrayList<String>();
 		for( int i = 2; i < args.length; i++ )
 			queryList.add(args[i]);
-		String outStr = evaluator.processKeywordQuery(wfID, queryList, true, false);
+		String outStr = evaluator.processKeywordQuery(wfID, queryList, true, false, null);
 		System.out.println(outStr);
 	}
 	
 	
 	public String processKeywordQuery(String wfID, List<String> queryList, boolean andSemantics,
-			boolean onlyTable) {
+			boolean onlyTable, String traceId) {
 		Digraph digraph = new Digraph();
 		JSONObject jsonObj = new JSONObject();
-		this.fillDigraphAndTopSortedJSONObj(wfID, digraph, jsonObj);
+		this.fillDigraphAndTopSortedJSONObj(wfID, digraph, jsonObj, traceId);
 		Hashtable<String, Double> objectRankHT = null;
 		Hashtable<String, Double> tempObjectRankHT = null;
 		for( int i = 0; i < queryList.size(); i++ ) {
 			String word = queryList.get(i);
 			if( i == 0 ) {
-				objectRankHT = this.evaluateObjectRank(wfID, digraph, jsonObj, word);     
+				objectRankHT = this.evaluateObjectRank(wfID, digraph, jsonObj, word, traceId);     
 				//System.out.println("First objectRank values:");
 				//this.printObjectRankHT(objectRankHT);
 			}
 			if( i > 0 ) {
-				tempObjectRankHT = this.evaluateObjectRank(wfID, digraph, jsonObj, word);
+				tempObjectRankHT = this.evaluateObjectRank(wfID, digraph, jsonObj, word, traceId);
 				//System.out.println("Next objectRank values:");
 				//this.printObjectRankHT(tempObjectRankHT);
 				Set<String> htKeys = tempObjectRankHT.keySet();
@@ -81,8 +81,14 @@ public class EvaluateWFObjectRank {
 		}
 		String retVal = null;
 		if( !onlyTable ) {
-			String wfJSONStr = this.dao.getWorkflowReachEncoding(wfID);
-			retVal = this.addObjectRankValues(wfJSONStr, objectRankHT);
+			if( traceId == null ) {
+				String wfJSONStr = this.dao.getWorkflowReachEncoding(wfID);
+				retVal = this.addObjectRankValues(wfJSONStr, objectRankHT);
+			}
+			else {
+				String traceJSONStr = this.dao.getTrace(wfID, traceId + "");
+				retVal = this.addObjectRankValues(traceJSONStr, objectRankHT);
+			}
 		}
 		else {
 			MutableList<Pair<String, Double>> sortedPairs = this.createSortedPairs(objectRankHT);
@@ -164,13 +170,18 @@ public class EvaluateWFObjectRank {
 	
 	
 	//IMPORTANT: digraph and jsonObj are expected as just created objects and empty
-	private void fillDigraphAndTopSortedJSONObj(String wfID, Digraph digraph, JSONObject jsonObj) {
-		String wfJSONStr = this.dao.getWorkflowReachEncoding(wfID);
-		JSONObject wfObj = null;
+	private void fillDigraphAndTopSortedJSONObj(String wfID, Digraph digraph, JSONObject jsonObj,
+			String traceId) {
+		String graphJSONStr = null;
+		if( traceId == null )
+			graphJSONStr = this.dao.getWorkflowReachEncoding(wfID);
+		else
+			graphJSONStr = this.dao.getTrace(wfID, traceId + "");
+		JSONObject graphObj = null;
 		try {
-			wfObj = new JSONObject(wfJSONStr);
-			JSONArray edgesArray = wfObj.getJSONArray("edges");
-			JSONArray nodesArray = wfObj.getJSONArray("nodes");
+			graphObj = new JSONObject(graphJSONStr);
+			JSONArray edgesArray = graphObj.getJSONArray("edges");
+			JSONArray nodesArray = graphObj.getJSONArray("nodes");
 			Hashtable<String, JSONObject> nodesHT = new Hashtable<String, JSONObject>();
 			for( int i = 0; i < nodesArray.length(); i++ ) {
 				JSONObject nodeObj = nodesArray.getJSONObject(i);
@@ -197,11 +208,15 @@ public class EvaluateWFObjectRank {
 	
 	
 	private Hashtable<String, Double> evaluateObjectRank(String wfID, Digraph digraph, JSONObject jsonObj,
-			String word) {
+			String word, String traceId) {
 		double d = 0.2;
 		double transferRate = 0.2;
 		Hashtable<String, Double> objectRankHT = new Hashtable<String, Double>();
-		String matchNodesStr = this.searchIndex.get(wfID + "_" + word);
+		String matchNodesStr = null;
+		if( traceId == null )
+			matchNodesStr = this.searchIndex.get(wfID + "_" + word);
+		else
+			matchNodesStr = this.searchIndex.get(traceId + "_" + word);
 		List<String> matchNodesList = new ArrayList<String>();
 		StringTokenizer tokenizer = new StringTokenizer(matchNodesStr);
 		while( tokenizer.hasMoreTokens() ) {

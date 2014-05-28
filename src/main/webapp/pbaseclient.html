@@ -667,7 +667,6 @@ function callWfWSSearchTable(Y) {
 					var cols = [];
 					var colsTypes = [];
 				    var data = [];
-				    var nodeIds = [];
 					var colNames = json.columns;
 					for(var i = 0; i < colNames.length; i++) {
 						var cName = colNames[i];
@@ -685,11 +684,6 @@ function callWfWSSearchTable(Y) {
 						for(var j = 0; j < dataVals[i].length; j++) {
 							if( colsTypes[j] == 'string' ) {
 								data[i][cols[j]] = dataVals[i][j];
-							}
-							else if( colsTypes[j] == 'node' ) {
-								temp = dataVals[i][j];
-								data[i][cols[j]] = temp['nodeId'];
-								nodeIds.push(temp['nodeId']);
 							}
 						}
 					}

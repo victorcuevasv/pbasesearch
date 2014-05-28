@@ -14,7 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.dataone.daks.pbaserdf.dao.TDBDAO;
-import org.dataone.daks.pbasesearch.EvaluateWFObjectRank;
+import org.dataone.daks.pbasesearch.EvaluateObjectRank;
 
 /** Example resource class hosted at the URI path "/wfresource"
  */
@@ -38,7 +38,7 @@ public class WfResource {
 		}
     	else {
     		try {
-    			EvaluateWFObjectRank evaluator = new EvaluateWFObjectRank(dbname);
+    			EvaluateObjectRank evaluator = new EvaluateObjectRank(dbname);
     			StringTokenizer tokenizer = new StringTokenizer(keywords);
     			List<String> keywordList = new ArrayList<String>();
     			while( tokenizer.hasMoreTokens() )
@@ -49,7 +49,7 @@ public class WfResource {
     				andSemantics = true;
     			if( onlytable != null && onlytable.equalsIgnoreCase("true") )
     				onlyTable = true;
-    			retVal = evaluator.processKeywordQuery(wfid, keywordList, andSemantics, onlyTable);
+    			retVal = evaluator.processKeywordQuery(wfid, keywordList, andSemantics, onlyTable, null);
     		}
     		catch(Exception e) {
     			e.printStackTrace();
